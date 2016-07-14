@@ -33,6 +33,7 @@ public class LogActivity extends AppCompatActivity {
             }
         });
         log.error("onCreate done");
+        log.debug("just debugg'n");
     }
 
     @Override
