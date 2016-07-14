@@ -13,12 +13,12 @@ import org.slf4j.Logger;
 
 public class LogActivity extends AppCompatActivity {
 
-    //private final Logger log = Util.getLog(this.getClass());
+    //private final Logger log = LogUtil.getLog(this.getClass());
     private Logger log;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        log = Util.getLog(this);
+        log = LogUtil.getLog(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

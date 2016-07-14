@@ -12,11 +12,9 @@ import java.io.InputStream;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.android.LogcatAppender;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.joran.spi.JoranException;
@@ -25,35 +23,39 @@ import ch.qos.logback.core.joran.spi.JoranException;
  * Created by agp8x on 14.07.16.
  */
 @SuppressWarnings("deprecation")
-public class Util {
+public class LogUtil {
     private static boolean _configured;
 
-    public static void configLog() {
+    private static void configLog() {
+        if (_configured) {
+            return;
+        }
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         lc.reset();
         String pattern = "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n";
-        ConsoleAppender a = buildConsoleAppender(lc, pattern);
-        FileAppender f = buildFileAppender(lc, pattern);
+        ConsoleAppender<ILoggingEvent> a = buildConsoleAppender(lc, pattern);
+        FileAppender<ILoggingEvent> f = buildFileAppender(lc, pattern);
         ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
         root.addAppender(a);
         root.addAppender(f);
         root.setLevel(Level.ERROR);
+        _configured = true;
     }
 
-    private static FileAppender buildFileAppender(LoggerContext lc, String pattern) {
+    private static FileAppender<ILoggingEvent> buildFileAppender(LoggerContext lc, String pattern) {
         FileAppender<ILoggingEvent> f = new FileAppender<>();
         f.setContext(lc);
-        f.setFile("asdf.log");
+        f.setFile("logs/myLog.log");
         f.setEncoder(buildEncoder(lc, pattern));
         f.start();
         return f;
     }
 
     @NonNull
-    private static ConsoleAppender buildConsoleAppender(LoggerContext lc, String pattern) {
-        ConsoleAppender a = new ConsoleAppender();
+    private static ConsoleAppender<ILoggingEvent> buildConsoleAppender(LoggerContext lc, String pattern) {
+        ConsoleAppender<ILoggingEvent> a = new ConsoleAppender<>();
         a.setContext(lc);
-        a.setEncoder( buildEncoder(lc, pattern));
+        a.setEncoder(buildEncoder(lc, pattern));
         a.start();
         return a;
     }
@@ -67,11 +69,11 @@ public class Util {
         return enc;
     }
 
-    public static void configLogByFiles(Context context) {
+    private static void configLogByFiles(Context context) {
         if (_configured) {
             return;
         }
-        InputStream is = null;
+        InputStream is;
         try {
             if (context == null) {
                 is = new FileInputStream("src/test/resources/logback-test.xml");
@@ -79,9 +81,10 @@ public class Util {
                 is = context.getAssets().open("logback.xml");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            _configured=true;
+            System.err.println(e.toString());
+            return;
         }
-        System.out.println(is);
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         lc.reset();
         JoranConfigurator conf = new JoranConfigurator();
@@ -97,5 +100,10 @@ public class Util {
     public static Logger getLog(Context context) {
         configLogByFiles(context);
         return LoggerFactory.getLogger(context.getClass());
+    }
+
+    public static Logger getLog(Class cls) {
+        configLog();
+        return LoggerFactory.getLogger(cls);
     }
 }
